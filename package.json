@@ -1,0 +1,43 @@
+{
+  "name": "woo",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "init": "npm i && npx prisma db pull && npx prisma generate && tsc",
+    "start": "npx concurrently -k \"tsc -w\" \"npx nodemon\"",
+    "build": "npx prisma generate && tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@koa/cors": "^4.0.0",
+    "@prisma/client": "^4.16.0",
+    "@types/koa-bodyparser": "^4.3.10",
+    "@types/koa-router": "^7.4.4",
+    "@woocommerce/woocommerce-rest-api": "^1.0.1",
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.0",
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.0",
+    "koa-ejs": "^4.3.0",
+    "koa-favicon": "^2.1.0",
+    "koa-json": "^2.0.2",
+    "koa-jwt": "^4.0.4",
+    "koa-logger": "^3.2.1",
+    "koa-mount": "^4.0.0",
+    "koa-router": "^12.0.0",
+    "winston": "^3.9.0",
+    "woocommerce": "^2.4.0",
+    "woocommerce-api": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.1",
+    "nodemon": "^2.0.22",
+    "prisma": "^4.16.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.3"
+  },
+  "description": ""
+}

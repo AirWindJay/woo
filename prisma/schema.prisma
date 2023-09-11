@@ -1,0 +1,808 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model action_events {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  batch_id        String    @db.Char(36)
+  user_id         Int       @db.UnsignedInt
+  name            String    @db.VarChar(255)
+  actionable_type String    @db.VarChar(255)
+  actionable_id   Int       @db.UnsignedInt
+  target_type     String    @db.VarChar(255)
+  target_id       Int       @db.UnsignedInt
+  model_type      String    @db.VarChar(255)
+  model_id        Int?      @db.UnsignedInt
+  fields          String    @db.Text
+  status          String    @default("running") @db.VarChar(25)
+  exception       String    @db.Text
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  @@index([actionable_type, actionable_id], map: "action_events_actionable_type_actionable_id_index")
+  @@index([batch_id, model_type, model_id], map: "action_events_batch_id_model_type_model_id_index")
+  @@index([user_id], map: "action_events_user_id_index")
+}
+
+model addresses {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id     Int       @db.UnsignedInt
+  order_id    Int?      @db.UnsignedInt
+  first_name  String?   @db.VarChar(50)
+  last_name   String?   @db.VarChar(50)
+  company     String?   @db.VarChar(255)
+  address     String?   @db.VarChar(255)
+  address2    String?   @db.VarChar(255)
+  city        String?   @db.VarChar(50)
+  province    String?   @db.VarChar(50)
+  postal_code String?   @db.VarChar(255)
+  country     String?   @default("US") @db.VarChar(255)
+  phone       String?   @db.VarChar(255)
+  email       String?   @db.VarChar(255)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+  acct_id     String?   @db.VarChar(50)
+  users       users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "addresses_user_id_foreign")
+
+  @@index([order_id], map: "addresses_order_id_foreign")
+  @@index([user_id], map: "addresses_user_id_index")
+}
+
+model admin_schema {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  name           String   @db.VarChar(255)
+  batch          Int
+  migration_time DateTime @default(now()) @db.Timestamp(0)
+}
+
+model admin_tokens {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  admin_id   Int?      @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  type       String    @db.VarChar(255)
+  token      String    @unique(map: "admin_tokens_token_unique") @db.VarChar(64)
+  expires_at DateTime? @db.Timestamp(0)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  admins     admins?   @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "admin_tokens_admin_id_foreign")
+
+  @@index([admin_id], map: "admin_tokens_admin_id_foreign")
+}
+
+model admins {
+  id           Int            @id @default(autoincrement()) @db.UnsignedInt
+  username     String?        @db.VarChar(255)
+  password     String?        @db.VarChar(255)
+  last_login   DateTime       @default(now()) @db.Timestamp(0)
+  admin_tokens admin_tokens[]
+}
+
+model adonis_schema {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  name           String?  @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime @default(now()) @db.Timestamp(0)
+}
+
+model bell_notifications {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    Int       @db.UnsignedInt
+  message    String?   @db.VarChar(255)
+  url        String?   @db.VarChar(255)
+  status     String?   @default("unread") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "bell_notifications_user_id_foreign")
+
+  @@index([user_id], map: "bell_notifications_user_id_foreign")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model cache {
+  key        String? @unique(map: "cache_key_unique") @db.VarChar(255)
+  value      String? @db.Text
+  expiration Int?
+
+  @@ignore
+}
+
+model countries {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  code       String    @db.VarChar(3)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model customers {
+  id             Int          @id @default(autoincrement()) @db.UnsignedInt
+  user_id        Int          @db.UnsignedInt
+  marketplace_id Int          @db.UnsignedInt
+  remote_id      String       @db.VarChar(255)
+  first_name     String       @db.VarChar(255)
+  last_name      String       @db.VarChar(255)
+  company        String?      @db.VarChar(255)
+  email          String?      @db.VarChar(255)
+  phone          String?      @db.VarChar(255)
+  created_at     DateTime?    @db.Timestamp(0)
+  updated_at     DateTime?    @db.Timestamp(0)
+  deleted_at     DateTime?    @db.Timestamp(0)
+  marketplaces   marketplaces @relation(fields: [marketplace_id], references: [id], onUpdate: Restrict, map: "customers_marketplace_id_foreign")
+  users          users        @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "customers_user_id_foreign")
+
+  @@index([marketplace_id], map: "customers_marketplace_id_foreign")
+  @@index([user_id], map: "customers_user_id_foreign")
+}
+
+model dimensions {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id    Int       @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  width      Int       @db.UnsignedInt
+  height     Int       @db.UnsignedInt
+  length     Int       @db.UnsignedInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "dimensions_user_id_foreign")
+
+  @@index([user_id], map: "dimensions_user_id_foreign")
+}
+
+model email_templates {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    Int       @db.UnsignedInt
+  active     Boolean   @default(false)
+  name       String    @db.VarChar(100)
+  fromEmail  String    @db.VarChar(100)
+  fromName   String    @db.VarChar(100)
+  subject    String    @db.VarChar(200)
+  body       String    @db.LongText
+  bcc        String?   @db.VarChar(100)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "email_templates_user_id_foreign")
+
+  @@index([user_id], map: "email_templates_user_id_foreign")
+}
+
+model employees {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    Int       @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  username   String    @unique(map: "employees_username_unique") @db.VarChar(255)
+  password   String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  last_login DateTime? @db.Timestamp(0)
+  origin_id  Int?
+  users      users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "employees_user_id_foreign")
+
+  @@index([user_id], map: "employees_user_id_foreign")
+}
+
+model integration_settings {
+  id             Int          @id @default(autoincrement()) @db.UnsignedInt
+  integration_id Int          @db.UnsignedInt
+  name           String       @db.VarChar(255)
+  value          String?      @db.Text
+  created_at     DateTime?    @db.Timestamp(0)
+  updated_at     DateTime?    @db.Timestamp(0)
+  deleted_at     DateTime?    @db.Timestamp(0)
+  integrations   integrations @relation(fields: [integration_id], references: [id], onUpdate: Restrict, map: "integration_settings_integration_id_foreign")
+
+  @@index([integration_id], map: "integration_settings_integration_id_index")
+}
+
+model integrations {
+  id                   Int                    @id @default(autoincrement()) @db.UnsignedInt
+  user_id              Int                    @db.UnsignedInt
+  marketplace_id       Int                    @db.UnsignedInt
+  name                 String                 @db.VarChar(255)
+  active               Boolean                @default(false)
+  last_synced_at       DateTime?              @db.Timestamp(0)
+  created_at           DateTime?              @db.Timestamp(0)
+  updated_at           DateTime?              @db.Timestamp(0)
+  deleted_at           DateTime?              @db.Timestamp(0)
+  nickname             String?                @db.VarChar(255)
+  integration_settings integration_settings[]
+  marketplaces         marketplaces           @relation(fields: [marketplace_id], references: [id], onUpdate: Restrict, map: "integrations_marketplace_id_foreign")
+  users                users                  @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "integrations_user_id_foreign")
+  orders               orders[]
+
+  @@index([last_synced_at], map: "integrations_last_synced_at_index")
+  @@index([marketplace_id], map: "integrations_marketplace_id_foreign")
+  @@index([user_id], map: "integrations_user_id_foreign")
+}
+
+model invalid_emails {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  email      String?   @db.VarChar(100)
+  status     String?   @db.VarChar(100)
+  sub_status String?   @db.VarChar(100)
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+}
+
+model marketplaces {
+  id           Int            @id @default(autoincrement()) @db.UnsignedInt
+  name         String         @db.VarChar(255)
+  code         String         @db.VarChar(255)
+  logo         String         @db.VarChar(255)
+  created_at   DateTime?      @db.Timestamp(0)
+  updated_at   DateTime?      @db.Timestamp(0)
+  deleted_at   DateTime?      @db.Timestamp(0)
+  customers    customers[]
+  integrations integrations[]
+  orders       orders[]
+}
+
+model migrations {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  migration  String
+  batch      Int
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model order_items {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  order_id   Int       @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  price      Decimal   @db.Decimal(8, 2)
+  weight     Decimal?  @db.Decimal(8, 2)
+  quantity   Int       @db.SmallInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  product_id BigInt?   @db.UnsignedBigInt
+  sku        String?   @db.VarChar(255)
+  orders     orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "order_items_ibfk_1")
+  products   products? @relation(fields: [product_id], references: [id], onUpdate: Restrict, map: "order_items_product_id_foreign")
+
+  @@index([order_id], map: "order_items_order_id_index")
+  @@index([product_id], map: "order_items_product_id_foreign")
+}
+
+model order_labels {
+  id                     Int                         @id @default(autoincrement()) @db.UnsignedInt
+  order_id               Int                         @unique(map: "order_labels_order_id_unique") @db.UnsignedInt
+  shipment_id            String?                     @db.VarChar(255)
+  tracking_id            String?                     @db.VarChar(255)
+  return_shipment_id     String?                     @db.VarChar(255)
+  return_tracking_id     String?                     @db.VarChar(255)
+  pdf                    Bytes?                      @db.MediumBlob
+  pdf_return             Bytes?                      @db.Blob
+  created_at             DateTime?                   @db.Timestamp(0)
+  updated_at             DateTime?                   @db.Timestamp(0)
+  status                 order_labels_status         @default(label_created)
+  status_return          order_labels_status_return?
+  tracking               String?                     @db.LongText
+  return_tracking        String?                     @db.LongText
+  manifest_id            String?                     @db.VarChar(255)
+  manifest_tracking_id   String?                     @db.VarChar(255)
+  refund_status          order_labels_refund_status?
+  refund_denial_reason   String?                     @db.VarChar(255)
+  return_status          order_labels_return_status?
+  return_created_at      DateTime?                   @db.DateTime(0)
+  deleted_at             DateTime?                   @db.Timestamp(0)
+  label_type             String?                     @default("pdf") @db.VarChar(255)
+  return_label_type      String?                     @default("pdf") @db.VarChar(255)
+  acceptance_date        DateTime?                   @db.Timestamp(0)
+  delivered_date         DateTime?                   @db.Timestamp(0)
+  claimed                Boolean                     @default(false)
+  hide_claim             Boolean                     @default(false)
+  expected_delivery_date DateTime?                   @db.Timestamp(0)
+  orders                 orders                      @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "order_labels_ibfk_1")
+}
+
+model order_meta {
+  meta_id    Int       @id @default(autoincrement()) @db.UnsignedInt
+  order_id   Int       @db.UnsignedInt
+  meta_key   String    @db.VarChar(255)
+  meta_value String    @db.LongText
+  deleted_at DateTime? @db.Timestamp(0)
+  orders     orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "order_meta_ibfk_1")
+
+  @@index([order_id], map: "order_meta_order_id_index")
+}
+
+model order_rate_components {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  order_id   Int       @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  value      Float
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  type       String    @db.VarChar(255)
+  deleted_at DateTime? @db.Timestamp(0)
+  orders     orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "order_rate_components_ibfk_1")
+
+  @@index([order_id], map: "order_rate_components_order_id_index")
+}
+
+model order_statuses {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String    @db.VarChar(55)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  orders     orders[]
+}
+
+model orders {
+  id                       Int                          @id @default(autoincrement()) @db.UnsignedInt
+  user_id                  Int                          @db.UnsignedInt
+  type                     String?                      @db.VarChar(255)
+  integration_id           Int?                         @db.UnsignedInt
+  marketplace_id           Int                          @db.UnsignedInt
+  shipping_address_id      Int?                         @db.UnsignedInt
+  shipping_service_id      Int?                         @db.UnsignedInt
+  origin_id                Int?                         @db.UnsignedInt
+  remote_id                String?                      @db.VarChar(255)
+  ref_id                   String?                      @db.VarChar(200)
+  total_price              Decimal?                     @db.Decimal(8, 2)
+  total_weight             Decimal?                     @db.Decimal(8, 2)
+  package_type             String                       @default("PKG") @db.VarChar(255)
+  package_length           Float?
+  package_width            Float?
+  package_height           Float?
+  confirmation             String?                      @default("DelCon") @db.VarChar(255)
+  special_services         String                       @db.LongText
+  rate                     Decimal?                     @db.Decimal(8, 2)
+  rate_expires             DateTime?                    @db.DateTime(0)
+  future_shipping          Boolean                      @default(false)
+  future_shipping_date     DateTime?                    @db.DateTime(0)
+  order_status_id          Int                          @db.UnsignedInt
+  description              String?                      @db.LongText
+  created_at               DateTime?                    @db.Timestamp(0)
+  updated_at               DateTime?                    @db.Timestamp(0)
+  parent_id                Int?                         @db.UnsignedInt
+  is_parent                Boolean                      @default(false)
+  rate_attempts            Int                          @default(0) @db.TinyInt
+  declared_value           Decimal?                     @db.Decimal(8, 2)
+  customs_items            String?                      @db.LongText
+  customs_content_type     orders_customs_content_type?
+  customs_sender_signature String?                      @db.VarChar(255)
+  insurance                String?                      @db.VarChar(255)
+  label_sticky             String?                      @db.VarChar(40)
+  label_sticky_2           String?                      @db.VarChar(40)
+  deleted_at               DateTime?                    @db.Timestamp(0)
+  tracking_price           Float                        @default(0.00)
+  insurance_price          Float                        @default(0.00)
+  rate_total               Float                        @default(0.00)
+  estimated_delivery_date  String?                      @db.VarChar(50)
+  delivery_zone            String?                      @db.VarChar(50)
+  origin_json              String?                      @db.LongText
+  import_status            String?                      @db.VarChar(255)
+  import_error             String?                      @db.VarChar(255)
+  printed_by               String?                      @default("Admin") @db.VarChar(255)
+  returned_by              String?                      @default("Admin") @db.VarChar(255)
+  voided_by                String?                      @default("Admin") @db.VarChar(255)
+  order_number             String?                      @db.VarChar(255)
+  order_number_int         Float?
+  product_sku              String?                      @db.VarChar(255)
+  extra_1                  String?                      @db.VarChar(25)
+  extra_2                  String?                      @db.VarChar(25)
+  extra_3                  String?                      @db.VarChar(25)
+  extra_4                  String?                      @db.VarChar(25)
+  extra_5                  String?                      @db.VarChar(25)
+  acct_id                  String?                      @db.VarChar(50)
+  shipsurance_id           String?                      @db.VarChar(50)
+  shipsurance_claim        String?                      @db.VarChar(255)
+  prepaid_return           Boolean                      @default(false)
+  outbound_id              Int?
+  verified_weight          Decimal?                     @db.Decimal(8, 2)
+  final_cost               Decimal?                     @db.Decimal(8, 2)
+  surcharge                Decimal?                     @db.Decimal(8, 2)
+  ship_from                String?                      @default("") @db.VarChar(255)
+  order_items              order_items[]
+  order_labels             order_labels?
+  order_meta               order_meta[]
+  order_rate_components    order_rate_components[]
+  integrations             integrations?                @relation(fields: [integration_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "orders_integration_id_foreign")
+  marketplaces             marketplaces                 @relation(fields: [marketplace_id], references: [id], onUpdate: Restrict, map: "orders_marketplace_id_foreign")
+  order_statuses           order_statuses               @relation(fields: [order_status_id], references: [id], onUpdate: Restrict, map: "orders_order_status_id_foreign")
+  origins                  origins?                     @relation(fields: [origin_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "orders_origin_id_foreign")
+  shipping_addresses       shipping_addresses?          @relation(fields: [shipping_address_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "orders_ibfk_1")
+  users                    users                        @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "orders_user_id_foreign")
+  shipments                shipments[]
+
+  @@index([confirmation], map: "orders_confirmation_index")
+  @@index([integration_id], map: "orders_integration_id_index")
+  @@index([marketplace_id], map: "orders_marketplace_id_index")
+  @@index([order_status_id], map: "orders_order_status_id_foreign")
+  @@index([origin_id], map: "orders_origin_id_foreign")
+  @@index([package_type], map: "orders_package_type_index")
+  @@index([shipping_address_id], map: "orders_shipping_address_id_foreign")
+  @@index([shipping_service_id], map: "orders_shipping_service_id_index")
+  @@index([user_id], map: "orders_user_id_index")
+}
+
+model origins {
+  id            Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id       Int       @db.UnsignedInt
+  first_name    String?   @db.VarChar(255)
+  last_name     String?   @db.VarChar(255)
+  company       String?   @db.VarChar(255)
+  address       String    @db.VarChar(255)
+  city          String    @db.VarChar(255)
+  state         String    @db.VarChar(255)
+  postal        String    @db.VarChar(255)
+  postal_origin String    @db.VarChar(255)
+  country       String    @db.VarChar(255)
+  phone         String?   @db.VarChar(255)
+  is_default    Boolean   @default(false)
+  timezone      String    @default("America/New_York") @db.VarChar(255)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+  deleted_at    DateTime? @db.Timestamp(0)
+  orders        orders[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model password_resets {
+  email      String    @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "password_resets_email_index")
+  @@ignore
+}
+
+model postal_contacts {
+  id                  Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id             Int       @unique(map: "postal_contacts_user_id_unique") @db.UnsignedInt
+  name                String?   @db.VarChar(255)
+  title               String?   @db.VarChar(255)
+  email_address       String?   @db.VarChar(255)
+  cell_phone_number   String?   @db.VarChar(255)
+  office_phone_number String?   @db.VarChar(255)
+  address             String?   @db.Text
+  notes               String?   @db.Text
+  created_at          DateTime? @db.Timestamp(0)
+  updated_at          DateTime? @db.Timestamp(0)
+  deleted_at          DateTime? @db.Timestamp(0)
+  users               users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "postal_contacts_user_id_foreign")
+}
+
+model postal_offices {
+  id           Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id      Int       @unique(map: "postal_offices_user_id_unique") @db.UnsignedInt
+  address      String?   @db.Text
+  hours        String?   @db.Text
+  phone_number String?   @db.VarChar(255)
+  pickup_time  String?   @db.VarChar(255)
+  notes        String?   @db.Text
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+  users        users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "postal_offices_user_id_foreign")
+}
+
+model print_histories {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id     Int       @db.UnsignedInt
+  batch_name  String?   @db.VarChar(255)
+  type        String?   @db.VarChar(255)
+  url         String?   @db.VarChar(255)
+  label_count BigInt?
+  status      String?   @db.VarChar(255)
+  deleted_at  DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  skipped     String?   @db.LongText
+  printed_by  String?   @default("Admin") @db.VarChar(255)
+  printed_on  String?   @db.VarChar(255)
+  users       users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "print_histories_user_id_foreign")
+
+  @@index([user_id], map: "print_histories_user_id_foreign")
+}
+
+model products {
+  id               BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id          Int           @db.UnsignedInt
+  product_name     String        @db.VarChar(255)
+  package_type     String        @default("PKG") @db.VarChar(255)
+  service_class    String        @db.VarChar(255)
+  weight           Decimal       @db.Decimal(8, 2)
+  sku              String?       @db.VarChar(255)
+  declared_value   Decimal?      @db.Decimal(8, 2)
+  package_length   Decimal?      @db.Decimal(8, 2)
+  package_width    Decimal?      @db.Decimal(8, 2)
+  package_height   Decimal?      @db.Decimal(8, 2)
+  packaging_weight Decimal?      @db.Decimal(8, 2)
+  created_at       DateTime?     @db.Timestamp(0)
+  updated_at       DateTime?     @db.Timestamp(0)
+  order_items      order_items[]
+  users            users         @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "products_user_id_foreign")
+
+  @@index([user_id], map: "products_user_id_foreign")
+}
+
+model scan_forms {
+  id                   Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id              Int       @db.UnsignedInt
+  pdf                  Bytes?    @db.Blob
+  pdf_url              String?   @db.VarChar(255)
+  labels               String?   @db.VarChar(255)
+  coverage             DateTime  @default(dbgenerated("('2020-09-17')")) @db.Date
+  manifest_id          String?   @db.VarChar(255)
+  manifest_tracking_id String?   @db.VarChar(255)
+  created_at           DateTime? @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+  users                users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "scan_forms_user_id_foreign")
+
+  @@index([user_id], map: "scan_forms_user_id_foreign")
+}
+
+model settings {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  key        String    @db.VarChar(255)
+  value      String    @db.Text
+  deleted_at DateTime? @db.Timestamp(0)
+
+  @@index([key], map: "settings_key_index")
+}
+
+model shipments {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id    Int       @db.UnsignedInt
+  order_id   Int       @db.UnsignedInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  orders     orders    @relation(fields: [order_id], references: [id], onUpdate: Restrict, map: "shipments_order_id_foreign")
+  users      users     @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "shipments_user_id_foreign")
+
+  @@index([order_id], map: "shipments_order_id_index")
+  @@index([user_id], map: "shipments_user_id_index")
+}
+
+model shipping_addresses {
+  id             Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id        Int       @db.UnsignedInt
+  saved          Boolean   @default(false)
+  first_name     String?   @db.VarChar(255)
+  last_name      String?   @db.VarChar(255)
+  company        String?   @db.VarChar(255)
+  address        String?   @db.VarChar(255)
+  address2       String?   @db.VarChar(255)
+  city           String?   @db.VarChar(255)
+  province       String?   @db.VarChar(255)
+  postal_code    String?   @db.VarChar(255)
+  country        String    @default("US") @db.VarChar(255)
+  phone          String?   @db.VarChar(255)
+  email          String?   @db.VarChar(255)
+  marketplace_id Int?
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  deleted_at     DateTime? @db.Timestamp(0)
+  orders         orders[]
+  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "shipping_addresses_user_id_foreign")
+
+  @@index([saved], map: "shipping_addresses_saved_index")
+  @@index([user_id], map: "shipping_addresses_user_id_foreign")
+}
+
+model shipping_label_formats {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  code        String    @db.VarChar(100)
+  name        String    @db.VarChar(255)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+  orientation String?   @db.VarChar(255)
+  top         String    @default("0") @db.VarChar(255)
+  left        String    @default("0") @db.VarChar(255)
+  right       String    @default("0") @db.VarChar(255)
+  bottom      String    @default("0") @db.VarChar(255)
+  width       String    @default("0") @db.VarChar(255)
+  height      String    @default("0") @db.VarChar(255)
+}
+
+model shipping_lines {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  order_id   Int
+  name       String    @db.VarChar(255)
+  amount     Decimal   @db.Decimal(8, 2)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model shipping_services {
+  id               Int       @id @default(autoincrement()) @db.UnsignedInt
+  code             String    @unique(map: "shipping_services_code_unique") @db.VarChar(120)
+  name             String    @db.VarChar(255)
+  special_services String?   @db.LongText
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+  order            Int       @default(0)
+  deleted_at       DateTime? @db.Timestamp(0)
+}
+
+model subscriptions {
+  id            Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id       Int       @db.UnsignedInt
+  name          String    @db.VarChar(255)
+  stripe_id     String    @db.VarChar(255)
+  stripe_plan   String    @db.VarChar(255)
+  quantity      Int
+  trial_ends_at DateTime? @db.Timestamp(0)
+  ends_at       DateTime? @db.Timestamp(0)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+  deleted_at    DateTime? @db.Timestamp(0)
+}
+
+model tax_lines {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  order_id   Int
+  name       String    @db.VarChar(255)
+  amount     Decimal   @db.Decimal(8, 2)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model user_accounts {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id         Int       @db.UnsignedInt
+  account_user_id Int       @db.UnsignedInt
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+}
+
+model user_roles {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  admin      Boolean   @default(false)
+  rep        Boolean   @default(false)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model users {
+  id                         Int                  @id @default(autoincrement()) @db.UnsignedInt
+  user_role_id               Int?                 @db.UnsignedInt
+  name                       String               @db.VarChar(255)
+  email                      String               @unique(map: "users_email_unique") @db.VarChar(255)
+  password                   String               @db.VarChar(255)
+  shipper_password           String?              @db.VarChar(255)
+  company                    String?              @db.VarChar(255)
+  phone                      String?              @db.VarChar(255)
+  shipping_label_format_id   String?              @db.VarChar(255)
+  shipping_label_orientation String?              @db.VarChar(255)
+  remember_token             String?              @db.VarChar(100)
+  created_at                 DateTime?            @db.Timestamp(0)
+  updated_at                 DateTime?            @db.Timestamp(0)
+  stripe_id                  String?              @db.VarChar(255)
+  card_brand                 String?              @db.VarChar(255)
+  card_last_four             String?              @db.VarChar(255)
+  trial_ends_at              DateTime?            @db.Timestamp(0)
+  address                    String?              @db.VarChar(255)
+  address2                   String?              @db.VarChar(255)
+  city                       String?              @db.VarChar(255)
+  state                      String?              @db.VarChar(255)
+  postal_code                String?              @db.VarChar(255)
+  country                    String?              @default("US") @db.VarChar(255)
+  shipper_id                 String?              @db.VarChar(255)
+  payment_id                 String?              @db.VarChar(255)
+  default_dimension_id       String?              @db.VarChar(255)
+  shipping_label_margins     String?              @db.LongText
+  shipping_label_size        String               @default("match") @db.VarChar(255)
+  coupon                     String?              @db.VarChar(255)
+  active_mail_classes        String?              @db.LongText
+  shipper_tabs               String?              @db.Text
+  shipper_features           String?              @db.Text
+  deleted_at                 DateTime?            @db.Timestamp(0)
+  email_verified_at          DateTime?            @db.Timestamp(0)
+  verify_code                String?              @db.VarChar(255)
+  emailNotif                 Boolean              @default(false)
+  rep_id                     String?              @db.VarChar(255)
+  shipper_username           String               @default("shipper") @db.VarChar(100)
+  default_printer            String?              @db.VarChar(255)
+  default_package            Boolean              @default(false)
+  package_detail_json        String?              @db.LongText
+  enable_guaranteed_claim    Boolean              @default(false)
+  plan_price                 Decimal?             @db.Decimal(8, 2)
+  title                      String?              @db.VarChar(255)
+  district                   String?              @db.VarChar(255)
+  shipsurance_card_id        String?              @db.VarChar(255)
+  shipsurance_card_brand     String?              @db.VarChar(255)
+  shipsurance_card_last_four String?              @db.VarChar(255)
+  shipsurance_balance        Decimal?             @db.Decimal(8, 2)
+  enable_shipsurance         Boolean              @default(false)
+  last_login                 DateTime?            @db.Timestamp(0)
+  shipsurance_terms          Boolean              @default(false)
+  shipsurance_accepted_date  DateTime?            @db.Timestamp(0)
+  ext                        String?              @db.VarChar(255)
+  survey                     String?              @db.VarChar(255)
+  marketplaces               String?              @db.LongText
+  active_parcel_protect      String?              @db.LongText
+  notes                      String?              @db.LongText
+  referral                   Boolean              @default(false)
+  suspend                    Boolean              @default(false)
+  pb_email                   String?              @db.VarChar(255)
+  pb_company                 String?              @db.VarChar(255)
+  pb_name                    String?              @db.VarChar(255)
+  suspend_at                 DateTime?            @db.DateTime(0)
+  shipping_options           String?              @default("[\"LBL\",\"SBR\",\"RLBL\",\"LBLPDF\",\"LBLRLBL\",\"LBLSBR\",\"TSTLBL\"]") @db.VarChar(255)
+  import_shipping_options    String?              @default("[\"LBL\",\"RLBL\",\"LBLRLBL\"]") @db.VarChar(255)
+  addresses                  addresses[]
+  bell_notifications         bell_notifications[]
+  customers                  customers[]
+  dimensions                 dimensions[]
+  email_templates            email_templates[]
+  employees                  employees[]
+  integrations               integrations[]
+  orders                     orders[]
+  postal_contacts            postal_contacts?
+  postal_offices             postal_offices?
+  print_histories            print_histories[]
+  products                   products[]
+  scan_forms                 scan_forms[]
+  shipments                  shipments[]
+  shipping_addresses         shipping_addresses[]
+  users                      users?               @relation("usersTousers", fields: [user_role_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "users_user_role_id_foreign")
+  other_users                users[]              @relation("usersTousers")
+
+  @@index([payment_id], map: "users_payment_id_index")
+  @@index([shipper_id], map: "users_shipper_id_index")
+  @@index([user_role_id], map: "users_user_role_id_foreign")
+}
+
+model sessions {
+  id            String  @unique(map: "sessions_id_unique") @db.VarChar(255)
+  user_id       BigInt? @db.UnsignedBigInt
+  ip_address    String? @db.VarChar(45)
+  user_agent    String? @db.Text
+  payload       String  @db.Text
+  last_activity Int
+}
+
+enum order_labels_status {
+  label_created
+  in_transit
+  delivered
+  voided
+  undelivered
+  exception
+}
+
+enum order_labels_status_return {
+  label_created
+  in_transit
+  delivered
+  voided
+  undelivered
+  exception
+}
+
+enum order_labels_refund_status {
+  requested
+  accepted
+  denied
+}
+
+enum order_labels_return_status {
+  printed
+  charged
+  delivered
+}
+
+enum orders_customs_content_type {
+  MERCHANDISE
+  DOCUMENTS
+  GIFT
+}
